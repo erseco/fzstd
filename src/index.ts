@@ -544,6 +544,8 @@ const rzb = (dat: Uint8Array, st: DZstdState, out?: Uint8Array) => {
         cbt = (spos -= ofc) >> 3;
         const ofp = 1 << ofc;
         let off = ofp + (((dat[cbt] | (dat[cbt + 1] << 8) | (dat[cbt + 2] << 16) | (dat[cbt + 3] << 24)) >>> (spos & 7)) & (ofp - 1));
+        // 4 bytes only guarantee 25 bits; offsets past 2^25 can need a fifth
+        if ((spos & 7) + ofc > 32) off += (dat[cbt + 4] << (32 - (spos & 7))) & (ofp - 1);
         cbt = (spos -= mlb[mlc]) >> 3;
         let ml = mlbl[mlc] + (((dat[cbt] | (dat[cbt + 1] << 8) | (dat[cbt + 2] << 16)) >> (spos & 7)) & ((1 << mlb[mlc]) - 1));
         cbt = (spos -= llb[llc]) >> 3;

@@ -94,4 +94,4 @@ Unlike my Zlib implementation [`fflate`](https://github.com/101arrowz/fflate), W
 - Some WASM ports cannot operate without being provided the decompressed size of the data in advance. `fzstd` decides how much memory to allocate from the frame headers.
 - `fzstd` is absolutely tiny: at **8kB minified and 3.8kB after gzipping**, it's much smaller than most WASM implementations.
 
-Please note that unlike the reference implementation, `fzstd` only supports a maximum backreference distance of 2<sup>25</sup> bytes. If you need to decompress files with an "ultra" compression level (20 or greater) AND your files can be above 32MB decompressed, `fzstd` may fail to decompress properly. Consider using a WebAssembly port for files this large.
+Backreference distances up to the maximum window size `fzstd` accepts (about 2GB) are fully supported, including frames produced with `--long` or "ultra" compression levels (20 or greater). Note that decompressing such frames requires allocating the entire window in memory, so a WebAssembly port may still be a better fit for very large files.
