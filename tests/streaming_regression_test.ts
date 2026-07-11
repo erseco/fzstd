@@ -1,5 +1,5 @@
 // Regression tests for streaming decompression (issue #19 scenario) and
-// for backreference offsets above 2^25 (silent corruption in rzb).
+// for large backreference offsets that cross a 4-byte bit-reading window.
 // Run with: bun test tests/streaming_regression_test.ts
 // The embedded frames are real zstd CLI output; expected payloads are
 // regenerated in JS, so no zstd binary is needed for the core tests.
@@ -111,16 +111,16 @@ describe('multi-frame streams', () => {
   });
 });
 
-// Backreference offsets >= 2^26 + 2^25 used to corrupt silently (the 4-byte
-// offset read supplies only 32 - (spos & 7) bits). Needs ~230 MB of buffers
-// and the zstd CLI, so it is opt-in: FZSTD_BIG_TESTS=1 bun test ...
+// The first affected distance is 2^26 + 2^25 - 3 (about 96 MiB): the 4-byte
+// offset read supplies only 32 - (spos & 7) bits. The test can use up to
+// ~800 MB peak RAM and needs zstd on PATH, so it is opt-in.
 const bigTest = process.env.FZSTD_BIG_TESTS ? it : it.skip;
-describe('offsets beyond 2^25 (opt-in large test)', () => {
+describe('large backreference offsets (opt-in large test)', () => {
   bigTest('decodes a --long=27 frame with ~100MB match distances', async () => {
     const { spawnSync } = await import('child_process');
     const probe = spawnSync('zstd', ['--version']);
     if (probe.error) throw new Error('zstd CLI not found on PATH; cannot run big offset test');
-    // 100 MiB of seeded LCG noise + 500 short copies scattered from near the
+    // 100 MiB of seeded SplitMix32 noise + 500 short copies scattered from near the
     // start: each copy needs a fresh ~100 MiB offset (no repeat-offset reuse),
     // so offset code 26 gets read at many bit alignments, some straddling the
     // 4-byte window that pre-fix code was limited to.

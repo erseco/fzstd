@@ -15,6 +15,6 @@ Streaming and large-offset regression cases, run with [Bun](https://bun.sh/):
 ```bash
 bun test tests/streaming_regression_test.ts
 
-# optional large-offset test (~400 MB RAM, needs zstd on PATH)
+# Optional large-offset test (up to ~800 MB peak RAM, needs zstd on PATH).
 FZSTD_BIG_TESTS=1 bun test tests/streaming_regression_test.ts
 ```
